@@ -26,10 +26,80 @@ const Tour=require('./../models/tourModel')
 
 //2.>> rout handlers
 exports.getAllTours=async (req,res)=>{
+    /*// console.log(req.query);{127.0.0.1:3000/api/v1/tours?duration=5&difficulty=easy
+    // {
+    //     duration=5&difficulty=easy
+
+    // }}*/
     // console.log(req.requestTime);
     //we have to sens all the data 
    try{
-    const X = await Tour.find();
+    
+    /////////////////////////////////////
+    //  const X = await Tour.find()
+    //  .where('duration')
+    //  .equals(5)
+    //  .where('difficulty')
+    //  .equals('easy');
+     ///////////////////////////////////
+    //  const X = await Tour.find({
+    //     duration:5,
+    //     difficulty:'easy'
+    // });
+    //////////////////////////////////
+    //built a query
+    //Filtering 
+    const queryObj = {...req.query};
+    const excludedFields =['page','sort','limit','fields'];
+    
+    
+
+    excludedFields.forEach(el=>delete queryObj[el]);
+    // console.log(req.query,queryObj);
+    // {
+    //     { duration: '5', difficulty: 'easy', sort: '1' } { duration: '5', difficulty: 'easy' }
+    // }
+    ////////////////////////////
+    //2>Advance filtering 
+    let queryStr = JSON.stringify(queryObj);
+    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g,match =>`$${match}`);
+    // console.log(JSON.parse(queryStr));
+    // //{ duration: '5', difficulty: {gte:'easy'} }{
+    //     127.0.0.1:3000/api/v1/tours?duration[gte]=5&difficulty=easy&sort=1
+    // }
+    //yeahi mila hai req.query me 
+    //{ duration: { gte: '5' }, difficulty: 'easy', sort: '1' }
+    // const query = Tour.find(queryObj);
+    let query = Tour.find(JSON.parse(queryStr));
+     //console.log(req.query);
+    ////////////////////////////////
+    //3> Sorting 
+    if(req.query.sort){
+        //sort the result
+        const sortBy = req.query.sort.split(',').join(' ');
+        // console.log(sortBy)
+        query= query.sort(sortBy);
+       //query= query.sort(req.query.sort);
+       //sort('price ratingsAverage')
+       //127.0.0.1:3000/api/v1/tours?duration[gte]=5&difficulty=easy&sort=price,ratingsAverage
+       //replce , with space 
+    }else{
+        query= query.sort('-createdAt');
+    }
+
+    
+    
+    
+    
+    
+    
+    //Execute the query
+
+
+     const X = await query;
+
+
+    //send response 
     res.status(200).json({
         status:'success',
         requestedat: req.requestTime,
