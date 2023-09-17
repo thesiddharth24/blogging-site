@@ -9,7 +9,7 @@ const router = express.Router();//its  a middleware
 // })
 
 ////////////////////////////
-router.param('id',tourcontrollers.checkID);
+// router.param('id',tourcontrollers.checkID);
 
 //creatye check body 
 // check if a body contains the name and price property 
@@ -18,7 +18,8 @@ router.param('id',tourcontrollers.checkID);
 router
 .route('/')
 .get(tourcontrollers.getAllTours)
-.post(tourcontrollers.checkBody, tourcontrollers.createTour);
+//.post(tourcontrollers.checkBody, tourcontrollers.createTour);
+.post(tourcontrollers.createTour);
 //router.get('/api/v1/tours',getAllTours);//to get all the tours   ---->> choose alternative method given below 
 router.get('/:id',tourcontrollers.getTour); //get a perticular tour 
 
