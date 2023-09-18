@@ -21,8 +21,15 @@ router
 .route('/top-5-cheap')
 .get(tourcontrollers.aliasTopTours,tourcontrollers.getAllTours);//do with the help of middleware 
 
+//Aggrigation pipeline 
+router
+.route('/tour-stats')
+.get(tourcontrollers.getTourStats);
 
-
+//Business problem 
+router
+.route('/monthly-plan/:year')
+.get(tourcontrollers.getMonthlyPlan);
 
 router
 .route('/')
