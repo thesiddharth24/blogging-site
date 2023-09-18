@@ -122,7 +122,7 @@ try{
 }
 };
 
-exports.createTour = async (req,res)=>{
+exports.createTour = async (req,res) =>{
     //    console.log(req.body);
     //    const newId = X[X.length -1].id +1;
     //    const newTour = Object.assign({id:newId},req.body);//converting to json file
@@ -140,6 +140,7 @@ exports.createTour = async (req,res)=>{
     ////////////////////////////
 
      //Tour.create({}).then()
+
      try{
         const newTour= await Tour.create(req.body);
         res.status(201).json({
@@ -149,8 +150,10 @@ exports.createTour = async (req,res)=>{
             }
         });
      }catch(err){
-         res.status(400).json({
+        // console.log(err);
+         res.status(404).json({
              staus:'fail',
+             
              message:err
          })
      }

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const slugify= require('slugify');
 
 
 const tourSchema =new  mongoose.Schema({
@@ -8,6 +9,7 @@ const tourSchema =new  mongoose.Schema({
         unique:true,
         trim:true
     },
+    slug:String,
     duration:{
         type:Number,
         required:[true,`A tour must have the duration`]
@@ -56,7 +58,44 @@ const tourSchema =new  mongoose.Schema({
     },
     startDates:[Date]
 
+},{
+    toJSON:{
+        virtuals:true
+    },
+    toObject:{
+        virtuals:true
+    }
 });
+
+
+//virtual properties
+//it does not take space in the memory 
+//we cant apply query on the virtual property because it is not present in the database 
+
+tourSchema.virtual('durationWeeks').get(function(){
+    return this.duration / 7 ;
+    //this here pointing to the current document
+});
+
+//Documrnt middleware RUNS BEFORE .SAVE() AND BEFORE  .CREATE()
+
+tourSchema.pre('save',function(next){
+    //console.log(this);
+    this.slug = slugify(this.name,{ lower:true });
+    next();
+});
+//here this points to the current document which we have currently saved 
+
+// tourSchema.pre('save',function(next){
+//     //console.log(this);
+//     console.log(`we will save the document`);
+//     next();
+// });
+// //here save is the hook
+// tourSchema.post('save',function(doc,next){
+//     console.log(doc)
+//     next();
+// })
 
 const Tour = mongoose.model('Tour',tourSchema);  //here Tour is like a class wih the use of schema
 
