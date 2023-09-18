@@ -15,6 +15,15 @@ const router = express.Router();//its  a middleware
 // check if a body contains the name and price property 
 //if not , then send back 400 (bad request )
 //add it to the post handler stack
+
+///alias 
+router
+.route('/top-5-cheap')
+.get(tourcontrollers.aliasTopTours,tourcontrollers.getAllTours);//do with the help of middleware 
+
+
+
+
 router
 .route('/')
 .get(tourcontrollers.getAllTours)

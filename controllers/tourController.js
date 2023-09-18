@@ -1,5 +1,14 @@
+const { throws } = require('assert');
 const fs = require('fs');
-const Tour=require('./../models/tourModel')
+const Tour=require('./../models/tourModel');
+
+exports.aliasTopTours = (req,res,next) =>{
+    req.query.limit='5';
+    req.query.sort ='-ratingsAverage,price';
+    req.query.fields='name,price,ratingsAverage,summary,difficulty';
+    next()
+
+} ;
 
 //const X = JSON.parse(fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`));//converting to the array of js object 
 //routers
@@ -25,16 +34,15 @@ const Tour=require('./../models/tourModel')
 // };
 
 //2.>> rout handlers
-exports.getAllTours=async (req,res)=>{
-    /*// console.log(req.query);{127.0.0.1:3000/api/v1/tours?duration=5&difficulty=easy
-    // {
-    //     duration=5&difficulty=easy
 
-    // }}*/
-    // console.log(req.requestTime);
-    //we have to sens all the data 
-   try{
-    
+class APIFeatures{
+    constructor(query,queryStr){
+        this.query=query;
+        this.queryStr=queryStr;
+    }
+    //req.query=queryStr
+
+    filter(){
     /////////////////////////////////////
     //  const X = await Tour.find()
     //  .where('duration')
@@ -49,7 +57,7 @@ exports.getAllTours=async (req,res)=>{
     //////////////////////////////////
     //built a query
     //Filtering 
-    const queryObj = {...req.query};
+    const queryObj = {...this.queryStr};
     const excludedFields =['page','sort','limit','fields'];
     
     
@@ -70,34 +78,88 @@ exports.getAllTours=async (req,res)=>{
     //yeahi mila hai req.query me 
     //{ duration: { gte: '5' }, difficulty: 'easy', sort: '1' }
     // const query = Tour.find(queryObj);
-    let query = Tour.find(JSON.parse(queryStr));
+      this.query.find(JSON.parse(queryStr));
+    //let query = Tour.find(JSON.parse(queryStr));
      //console.log(req.query);
     ////////////////////////////////
-    //3> Sorting 
-    if(req.query.sort){
-        //sort the result
-        const sortBy = req.query.sort.split(',').join(' ');
-        // console.log(sortBy)
-        query= query.sort(sortBy);
-       //query= query.sort(req.query.sort);
-       //sort('price ratingsAverage')
-       //127.0.0.1:3000/api/v1/tours?duration[gte]=5&difficulty=easy&sort=price,ratingsAverage
-       //replce , with space 
-    }else{
-        query= query.sort('-createdAt');
+    return this;
     }
 
+    sort(){
+        if(this.queryStr.sort){
+            //sort the result
+            const sortBy = req.query.sort.split(',').join(' ');
+            // console.log(sortBy)
+            this.query= this.query.sort(sortBy);
+           //query= query.sort(req.query.sort);
+           //sort('price ratingsAverage')
+           //127.0.0.1:3000/api/v1/tours?duration[gte]=5&difficulty=easy&sort=price,ratingsAverage
+           //replce , with space 
+        }else{
+            this.query= this.query.sort('-createdAt');
+        }
+        return this;
+    }
+}
+
+exports.getAllTours=async (req,res)=>{
+    /*// console.log(req.query);{127.0.0.1:3000/api/v1/tours?duration=5&difficulty=easy
+    // {
+    //     duration=5&difficulty=easy
+
+    // }}*/
+    // console.log(req.requestTime);
+    //we have to sens all the data 
+   try{
     
     
+    
+   //3> field limiting 
+   if(req.query.fields){
+       const fields = req.query.fields.split(',').join(' ');
+       //    query=query.select('name duration price');
+       //selecting certain fields name is called projecting
+       query=query.select(fields);
+       //-name means we are excluding the field 
+
+   }else{
+       query=query.select('-__v');
+   }
+   //NOTE-> here in this either we take all +ve or all -ve fields 
+   //ya toh ham include ka fxn laga skte ya exclude ka fxn laga skte 
+   ///////////////////////////////////////////
+   /////////////////
+   //4-> pagenation 
+   //* 1 convert string into int 
+   const page = req.query.page * 1 || 1; //we use || for default value
+   const limit = req.query.limit * 1 || 100;
+   const skip = (page - 1) * limit;
+   //page=2&limit10 , 1-10 -> page 1 ,11-20 -> page 2, 21-30 ->page 3
+   //if we demand page 3 then we have to skip 20 result so query will be -! 
+   //query = query.skip(20).limit(10);
+   //    query = query.skip(10).limit(10);
+    
+
+   query = query.skip(skip).limit(limit);
+   
+   if(req.query.page){
+       const numTours = await Tour.countDocuments();
+       if(skip >= numTours ){
+           throw new Error('This page does not exit');
+           //here we find an error in code look into this 
+       }
+   }
     
     
     
     
     //Execute the query
 
-
-     const X = await query;
-
+     const features = new APIFeatures(Tour.find(),req.query).filter().sort();
+    //  const X = await query;
+    const X = await features.query;
+     //query.sort().select().skip().limit() 
+     //its called chaining 
 
     //send response 
     res.status(200).json({

@@ -51,7 +51,8 @@ const tourSchema =new  mongoose.Schema({
     images:[String],
     createdAt:{
         type:Date,
-        default:Date.now()
+        default:Date.now(),
+        select:false //this will hide this column from the client 
     },
     startDates:[Date]
 
